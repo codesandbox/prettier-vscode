@@ -23,8 +23,8 @@ import * as yamlPlugin from "prettier/parser-yaml";
 // commented out as the cod uses `new Function("return this") which
 // is not allowed in the VS Code extension host as it enforces
 // the Trusted Types Content Security Policy
-//import * as flowPlugin from "prettier/parser-flow";
-//import * as postcssPlugin from "prettier/parser-postcss";
+// import * as flowPlugin from "prettier/parser-flow";
+import * as postcssPlugin from "prettier/parser-postcss";
 
 import { TextDocument, Uri } from "vscode";
 import { LoggingService } from "./LoggingService";
@@ -41,6 +41,7 @@ const plugins = [
   meriyahPlugin,
   typescriptPlugin,
   yamlPlugin,
+  postcssPlugin,
 ];
 
 export class ModuleResolver implements ModuleResolverInterface {
@@ -96,6 +97,21 @@ export class ModuleResolver implements ModuleResolverInterface {
               vscodeLanguageIds: ["typescriptreact"],
               extensions: [],
               parsers: ["typescript", "babel-ts"],
+            },
+            {
+              vscodeLanguageIds: ["css"],
+              extensions: [],
+              parsers: ["css"],
+            },
+            {
+              vscodeLanguageIds: ["scss"],
+              extensions: [],
+              parsers: ["scss"],
+            },
+            {
+              vscodeLanguageIds: ["less"],
+              extensions: [],
+              parsers: ["less"],
             },
             {
               vscodeLanguageIds: ["json"],
