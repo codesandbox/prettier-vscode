@@ -26,7 +26,7 @@ import * as yamlPlugin from "prettier/parser-yaml";
 // import * as flowPlugin from "prettier/parser-flow";
 import * as postcssPlugin from "prettier/parser-postcss";
 
-import { TextDocument, Uri } from "vscode";
+import { TextDocument, Uri, workspace } from "vscode";
 import { LoggingService } from "./LoggingService";
 import { getWorkspaceRelativePath } from "./util";
 import { ResolveConfigOptions, Options } from "prettier";
@@ -207,15 +207,52 @@ export class ModuleResolver implements ModuleResolverInterface {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     vscodeConfig: PrettierVSCodeConfig
   ): Promise<Options | "error" | "disabled" | null> {
+    const workspaceFolder = workspace.getWorkspaceFolder(uri);
+    if (!workspaceFolder) {
+      return null;
+    }
+
+    const prettierConfigFiles = [".prettierrc", "prettier.config.json"];
+
+    for (const configName of prettierConfigFiles) {
+      try {
+        const configPath = Uri.joinPath(workspaceFolder.uri, configName);
+        await workspace.fs.stat(configPath);
+
+        // @ts-expect-error TextDecoder not configured for browser environment
+        const configContents = new TextDecoder().decode(
+          await workspace.fs.readFile(configPath)
+        );
+
+        return JSON.parse(configContents);
+      } catch (e) {
+        // Try next one
+      }
+    }
+
     return null;
   }
 
   async getResolvedConfig(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _doc: TextDocument,
+    doc: TextDocument,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _vscodeConfig: PrettierVSCodeConfig
+    vscodeConfig: PrettierVSCodeConfig
   ): Promise<"error" | "disabled" | PrettierOptions | null> {
+    const config = await this.resolveConfig(
+      {
+        resolveConfigFile: async () => null,
+        resolveConfig: async () => null,
+      },
+      doc.uri,
+      doc.fileName,
+      vscodeConfig
+    );
+
+    if (config) {
+      return config;
+    }
+
     return null;
   }
 
